@@ -2,24 +2,30 @@ package main
 
 import (
     "fmt"
-    "math/rand"
+    "mathlib"
+    // render engind
+    "os"
+
 )
 
 
-func buildBuilb(){
-
-}
 
 func main(){
     fmt.Println("a")
     
-    bomba := createBulb(0.1, 9, 0, 0, 0)
-
-    for i := 0; i < 10; i++{
-        bomba = bomba.calcVector()
-        bomba.quat.X += x
-        bomba.quat.Y += y
-        bomba.quat.Z += z
-    }
+    complex := mathlib.Quat{X: 0.2, Y: 0.3, Z: 0.4, R: 9} 
+    bomba := createBulb(&complex, 0.1)
+   
+    f, _ := os.Create("dest.txt")
+     
+    for i := 0; i < 1000; i++{
         
+        bomba.c = bomba.calcVector()
+        f.WriteString(fmt.Sprintf("%f ", bomba.c.X))
+        f.WriteString(fmt.Sprintf("%f ", bomba.c.Y))
+        f.WriteString(fmt.Sprintf("%f ", bomba.c.Z))
+        f.WriteString("\n")
+
+    }
+
 }
