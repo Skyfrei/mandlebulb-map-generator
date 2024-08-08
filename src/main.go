@@ -3,15 +3,11 @@ package main
 import (
     "fmt"
     "mathlib"
-    "os"
-    //"math/rand"
+//    "math/rand"
     "runtime"
     "log"
     "strings"
     "go/build"
-    "image"
-    "image/draw"
-    _"image/png"
     //render-engine
     "github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -25,27 +21,41 @@ func init(){
     runtime.LockOSThread()
 }
 
-func readCoordinates() string{
-   return "" 
-}
 
 func main(){
-    complex := mathlib.Quat{X: 0.1, Y: -0.4, Z: 0.32, R: 8}
-    startingCoord := mathlib.Quat{X: 0.1, Y: 0.1, Z: 0.1, R: 8}
+    complex := mathlib.Quat{X: 0.1, Y: 0.1, Z: 0.1, R: 8}
+    
+    maxIter := 10
 
-    bomba := createBulb(&complex, &startingCoord) 
-    for i := 0; i < 1000000; i++{        
-        bomba.quat = bomba.calcVector()
-//        fmt.Println(bomba.quat.X)
-        if bomba.magnitude() >= 1{
-            continue
+    iter :=100
+
+    for i := -100; i < iter; i++{
+        for j:= -100; j< iter; j++{
+            for k :=-100; k < iter; k++{
+                startingCoord := mathlib.Quat{X: float64(i) / float64(iter), Y: float64(j) /float64( iter), Z: float64(k)/ float64(iter), R:complex.R}
+                bomba := createBulb(&complex, &startingCoord)
+                tempIter := 0
+                
+                for(true){
+                    bomba.quat = bomba.calcVector()
+                    bomba.quat.X += bomba.c.X
+                    bomba.quat.Y += bomba.c.Y
+                    bomba.quat.Z += bomba.c.Z
+                    tempIter++
+                    if bomba.magnitude() > 2{
+                        break
+                    }
+
+                    if(tempIter > maxIter){
+                        vertices = append(vertices, float64(i * 1))
+                        vertices = append(vertices, float64(j * 1))
+                        vertices = append(vertices, float64(k * 1))
+                        break
+                    }
+                }
+            }
         }
-        vertices = append(vertices, bomba.quat.X)
-        vertices = append(vertices, bomba.quat.Y)
-        vertices = append(vertices, bomba.quat.Z)
     }
-
-
     if err := glfw.Init(); err != nil {
 		log.Fatalln("failed to initialize glfw:", err)
 	}
@@ -77,28 +87,25 @@ func main(){
 
 	gl.UseProgram(program)
 
-	projection := mgl32.Perspective(mgl32.DegToRad(45.0), float32(windowWidth)/windowHeight, 0.1, 10.0)
+	projection := mgl32.Perspective(mgl32.DegToRad(120.0), float32(windowWidth)/windowHeight, 0.1, 20.0)
 	projectionUniform := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 	gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
 
-	camera := mgl32.LookAtV(mgl32.Vec3{3, 3, 3}, mgl32.Vec3{0, 1, 0}, mgl32.Vec3{0, 1, 0})
+	camera := mgl32.LookAtV(mgl32.Vec3{4,1,2}, mgl32.Vec3{-0, -0, -0}, mgl32.Vec3{0, 0, 1})
 	cameraUniform := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 	gl.UniformMatrix4fv(cameraUniform, 1, false, &camera[0])
 
-	model := mgl32.Ident4()
+    scale := mgl32.Scale3D(5.0, 5.0, 2.0)
+	model := scale.Mul4(mgl32.Ident4())
 	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
 	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
 
-	textureUniform := gl.GetUniformLocation(program, gl.Str("tex\x00"))
-	gl.Uniform1i(textureUniform, 0)
-
 	gl.BindFragDataLocation(program, 0, gl.Str("outputColor\x00"))
 
-	// Load the texture
-	texture, err := newTexture("square.png")
-	if err != nil {
-		log.Fatalln(err)
-	}
+
+    pointSizeUniform := gl.GetUniformLocation(program, gl.Str("pointSize\x00"))
+    gl.Uniform1f(pointSizeUniform, 1.2)
+
 
 	// Configure the vertex data
 	var vao uint32
@@ -112,17 +119,14 @@ func main(){
 
 	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
-	gl.VertexAttribPointerWithOffset(vertAttrib, 3, gl.FLOAT, false, 5*4, 0)
-
-	texCoordAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vertTexCoord\x00")))
-	gl.EnableVertexAttribArray(texCoordAttrib)
-	gl.VertexAttribPointerWithOffset(texCoordAttrib, 2, gl.FLOAT, false, 5*4, 3*4)
+	gl.VertexAttribPointerWithOffset(vertAttrib, 3, gl.FLOAT, false, 3*4, 0)
 
 	// Configure global settings
 	gl.Enable(gl.DEPTH_TEST)
 	gl.DepthFunc(gl.LESS)
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
-
+    
+    gl.Enable(gl.VERTEX_PROGRAM_POINT_SIZE)
 	angle := 0.0
 	previousTime := glfw.GetTime()
 
@@ -143,10 +147,7 @@ func main(){
 
 		gl.BindVertexArray(vao)
 
-		gl.ActiveTexture(gl.TEXTURE0)
-		gl.BindTexture(gl.TEXTURE_2D, texture)
-
-		gl.DrawArrays(gl.POINTS, 0, int32(len(vertices) / 5))
+		gl.DrawArrays(gl.POINTS, 0, int32(len(vertices) / 3))
 
 		// Maintenance
 		window.SwapBuffers()
@@ -213,44 +214,6 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 	return shader, nil
 }
 
-func newTexture(file string) (uint32, error) {
-	imgFile, err := os.Open(file)
-	if err != nil {
-		return 0, fmt.Errorf("texture %q not found on disk: %v", file, err)
-	}
-	img, s, err := image.Decode(imgFile)
-	if err != nil {
-        fmt.Println(s)
-		return 0, err
-	}
-
-	rgba := image.NewRGBA(img.Bounds())
-	if rgba.Stride != rgba.Rect.Size().X*4 {
-		return 0, fmt.Errorf("unsupported stride")
-	}
-	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
-
-	var texture uint32
-	gl.GenTextures(1, &texture)
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(gl.TEXTURE_2D, texture)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	gl.TexImage2D(
-		gl.TEXTURE_2D,
-		0,
-		gl.RGBA,
-		int32(rgba.Rect.Size().X),
-		int32(rgba.Rect.Size().Y),
-		0,
-		gl.RGBA,
-		gl.UNSIGNED_BYTE,
-		gl.Ptr(rgba.Pix))
-
-	return texture, nil
-}
 
 var vertexShader = `
 #version 330
@@ -260,13 +223,14 @@ uniform mat4 camera;
 uniform mat4 model;
 
 in vec3 vert;
-in vec2 vertTexCoord;
 
 out vec2 fragTexCoord;
+uniform float pointSize;
 
 void main() {
-    fragTexCoord = vertTexCoord;
+    fragTexCoord = vec2(0.0, 0.0);
     gl_Position = projection * camera * model * vec4(vert, 1);
+    gl_PointSize = pointSize;
 }
 ` + "\x00"
 
@@ -280,7 +244,7 @@ in vec2 fragTexCoord;
 out vec4 outputColor;
 
 void main() {
-    outputColor = texture(tex, fragTexCoord);
+    outputColor = vec4(fragTexCoord,0,0);
 }
 ` + "\x00"
 

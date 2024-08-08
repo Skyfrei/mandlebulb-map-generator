@@ -11,4 +11,4 @@ require (
 	mathlib v0.0.0-00010101000000-000000000000
 )
 
-require golang.org/x/image v0.0.0-20190321063152-3fc05d484e9f // indirect
+require golang.org/x/image v0.0.0-20210607152325-775e3b0c77b9 // indirect

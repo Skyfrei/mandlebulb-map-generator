@@ -4,7 +4,7 @@ import(
 	"math"
     "mathlib"
 //    "math/rand"
-//    "fmt"
+ //   "fmt"
 )
 
 type mandelbulb struct{
@@ -18,33 +18,33 @@ func createBulb(comp, q *mathlib.Quat, ) *mandelbulb{
 	return &bulb
 }
 
-func (man *mandelbulb) phi() float64{
+
+func (man mandelbulb) phi() float64{
 	temp := man.quat
-	return math.Atan(temp.Y / temp.X) 
+	return math.Atan2(temp.Y, temp.X) 
 }
 
-func (man *mandelbulb) magnitude() float64{
+func (man mandelbulb) magnitude() float64{
+	temp := man.quat
+    return math.Sqrt(math.Pow(temp.X, 2) + math.Pow(temp.Y, 2) + math.Pow(temp.Z, 2))
+}
+
+func (man mandelbulb) theta() float64{
 	temp := man.quat
     return math.Atan2(math.Sqrt(math.Pow(temp.X, 2) + math.Pow(temp.Y, 2)), temp.Z)
 }
 
-func (man *mandelbulb) theta() float64{
-	temp := man.quat
-    return math.Atan2(temp.Y, temp.X)
-}
-
 func (man *mandelbulb) calcVector() mathlib.Quat{
-    vec := man.quat
+    vec := &man.quat
     theta := man.theta()
     phi := man.phi()
 
     rn := math.Pow(man.magnitude(), vec.R)
-    vec.X = (rn * math.Sin(vec.R * theta) * math.Cos(vec.R * phi))
-    vec.Y = (rn * math.Sin(vec.R * theta) * math.Sin(vec.R * phi))
-    vec.Z = (rn * math.Cos(vec.R * theta)) 
- //   fmt.Println(vec.X)
+    vec.X = rn * (math.Sin(vec.R * theta) * math.Cos(vec.R * phi))
+    vec.Y = rn * (math.Sin(vec.R * theta) * math.Sin(vec.R * phi))
+    vec.Z = rn * (math.Cos(vec.R * theta)) 
   
-    return vec
+    return *vec
 }
 
 
