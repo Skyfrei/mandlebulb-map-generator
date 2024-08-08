@@ -34,7 +34,7 @@ func main(){
     startingCoord := mathlib.Quat{X: 0.1, Y: 0.1, Z: 0.1, R: 8}
 
     bomba := createBulb(&complex, &startingCoord) 
-    for i := 0; i < 1000000; i++{        
+    for i := 0; i < 10000000000; i++{        
         bomba.quat = bomba.calcVector()
 //        fmt.Println(bomba.quat.X)
         if bomba.magnitude() >= 1{
