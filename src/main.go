@@ -47,9 +47,9 @@ func main(){
                     }
 
                     if(tempIter > maxIter){
-                        vertices = append(vertices, float64(i * 1))
-                        vertices = append(vertices, float64(j * 1))
-                        vertices = append(vertices, float64(k * 1))
+                        vertices = append(vertices, float32(i * 1) / float32(iter))
+                        vertices = append(vertices, float32(j * 1) / float32(iter))
+                        vertices = append(vertices, float32(k * 1) / float32(iter))
                         break
                     }
                 }
@@ -87,11 +87,11 @@ func main(){
 
 	gl.UseProgram(program)
 
-	projection := mgl32.Perspective(mgl32.DegToRad(120.0), float32(windowWidth)/windowHeight, 0.1, 20.0)
+	projection := mgl32.Perspective(mgl32.DegToRad(100.0), float32(windowWidth)/windowHeight, 0.1, 100.0)
 	projectionUniform := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 	gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
 
-	camera := mgl32.LookAtV(mgl32.Vec3{4,1,2}, mgl32.Vec3{-0, -0, -0}, mgl32.Vec3{0, 0, 1})
+	camera := mgl32.LookAtV(mgl32.Vec3{1,1,1}, mgl32.Vec3{-0, -0, -0}, mgl32.Vec3{0, 1, 0})
 	cameraUniform := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 	gl.UniformMatrix4fv(cameraUniform, 1, false, &camera[0])
 
@@ -104,7 +104,7 @@ func main(){
 
 
     pointSizeUniform := gl.GetUniformLocation(program, gl.Str("pointSize\x00"))
-    gl.Uniform1f(pointSizeUniform, 1.2)
+    gl.Uniform1f(pointSizeUniform, 1.5)
 
 
 	// Configure the vertex data
@@ -115,7 +115,7 @@ func main(){
 	var vbo uint32
 	gl.GenBuffers(1, &vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*3, gl.Ptr(vertices), gl.STATIC_DRAW)
 
 	vertAttrib := uint32(gl.GetAttribLocation(program, gl.Str("vert\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
@@ -228,8 +228,9 @@ out vec2 fragTexCoord;
 uniform float pointSize;
 
 void main() {
-    fragTexCoord = vec2(0.0, 0.0);
+
     gl_Position = projection * camera * model * vec4(vert, 1);
+        fragTexCoord = vec2(gl_Position);
     gl_PointSize = pointSize;
 }
 ` + "\x00"
@@ -248,7 +249,7 @@ void main() {
 }
 ` + "\x00"
 
-var vertices = []float64{
+var vertices = []float32{
 }
 
 
