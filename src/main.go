@@ -5,7 +5,9 @@ import (
     "mathlib"
 //    "math/rand"
     "runtime"
+    _"math"
     "log"
+    _"time"
     "strings"
     "go/build"
     //render-engine
@@ -23,39 +25,46 @@ func init(){
 
 
 func main(){
-    complex := mathlib.Quat{X: 0.1, Y: 0.1, Z: 0.1, R: 8}
+    complex := mathlib.Quat{X: 0.5, Y: 0.5, Z: 0.1, R: 8}
     
-    maxIter := 10
+    maxIter := 5
 
-    iter :=100
+    iter :=20.0
+    negativeIter := -10.0
+    step := 0.01
+    for i := negativeIter; i < iter; i += step {
+    for j := negativeIter; j < iter; j += step {
+        for k := negativeIter; k < iter; k += step {
+            startingCoord := mathlib.Quat{X: float64(i), Y: float64(j), Z: float64(k), R: complex.R}
+            bomba := createBulb(&complex, &startingCoord)
+            tempIter := 0
 
-    for i := -100; i < iter; i++{
-        for j:= -100; j< iter; j++{
-            for k :=-100; k < iter; k++{
-                startingCoord := mathlib.Quat{X: float64(i) / float64(iter), Y: float64(j) /float64( iter), Z: float64(k)/ float64(iter), R:complex.R}
-                bomba := createBulb(&complex, &startingCoord)
-                tempIter := 0
+            for true {
+                bomba.quat = bomba.calcVector()
+                bomba.quat.X += bomba.c.X
+                bomba.quat.Y += bomba.c.Y
+                bomba.quat.Z += bomba.c.Z
+                tempIter++
+                magnitude := bomba.magnitude()
                 
-                for(true){
-                    bomba.quat = bomba.calcVector()
-                    bomba.quat.X += bomba.c.X
-                    bomba.quat.Y += bomba.c.Y
-                    bomba.quat.Z += bomba.c.Z
-                    tempIter++
-                    if bomba.magnitude() > 2{
-                        break
-                    }
+                if magnitude > 2 {
+                    break
+                }
 
-                    if(tempIter > maxIter){
-                        vertices = append(vertices, float32(i * 1) / float32(iter))
-                        vertices = append(vertices, float32(j * 1) / float32(iter))
-                        vertices = append(vertices, float32(k * 1) / float32(iter))
-                        break
-                    }
+                if tempIter > maxIter {
+//                    fmt.Println(magnitude)
+                   // if math.Abs(magnitude - 2) < 1 {
+                        vertices = append(vertices, float32(i))
+                        vertices = append(vertices, float32(j))
+                        vertices = append(vertices, float32(k))     
+                 // }
+                    break
                 }
             }
         }
     }
+}
+
     if err := glfw.Init(); err != nil {
 		log.Fatalln("failed to initialize glfw:", err)
 	}
@@ -87,11 +96,11 @@ func main(){
 
 	gl.UseProgram(program)
 
-	projection := mgl32.Perspective(mgl32.DegToRad(100.0), float32(windowWidth)/windowHeight, 0.1, 100.0)
+	projection := mgl32.Perspective(mgl32.DegToRad(70.0), float32(windowWidth)/windowHeight, 0.1, 100.0)
 	projectionUniform := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 	gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
 
-	camera := mgl32.LookAtV(mgl32.Vec3{1,1,1}, mgl32.Vec3{-0, -0, -0}, mgl32.Vec3{0, 1, 0})
+	camera := mgl32.LookAtV(mgl32.Vec3{1,1,2}, mgl32.Vec3{-0, -0, -0}, mgl32.Vec3{0, 1, 0})
 	cameraUniform := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 	gl.UniformMatrix4fv(cameraUniform, 1, false, &camera[0])
 
@@ -104,7 +113,7 @@ func main(){
 
 
     pointSizeUniform := gl.GetUniformLocation(program, gl.Str("pointSize\x00"))
-    gl.Uniform1f(pointSizeUniform, 1.5)
+    gl.Uniform1f(pointSizeUniform, 2.5)
 
 
 	// Configure the vertex data
